@@ -1,0 +1,110 @@
+name: 🐛 Bug Report
+description: Report a bug or issue with Bio-MCP
+title: "[BUG] "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out this form to help us understand and fix the issue.
+
+  - type: dropdown
+    id: repository
+    attributes:
+      label: Which repository?
+      description: Which Bio-MCP repository is affected?
+      options:
+        - bio-mcp-blast
+        - bio-mcp-samtools
+        - bio-mcp-bwa
+        - bio-mcp-seqkit
+        - bio-mcp-queue
+        - bio-mcp-template
+        - Other
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: tool-version
+    attributes:
+      label: Tool Version
+      description: Which version of the bioinformatics tool are you using?
+      placeholder: "e.g., BLAST 2.15.0, samtools 1.18"
+    validations:
+      required: false
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe what happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the bug
+      placeholder: |
+        1. Tool called: '...'
+        2. Parameters used: '...'
+        3. Input file: '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe the expected behavior...
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Message
+      description: Full error message or traceback
+      render: shell
+      placeholder: Paste the complete error message here...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment-os
+    attributes:
+      label: Operating System
+      options:
+        - macOS
+        - Ubuntu/Debian
+        - CentOS/RHEL
+        - Windows (WSL)
+        - Other Linux
+        - Docker
+      default: 0
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: environment-deployment
+    attributes:
+      label: Deployment Method
+      options:
+        - label: Local installation
+        - label: Docker container
+        - label: Queue system
+        - label: Cloud deployment
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
+      placeholder: Add any other context, screenshots, or relevant information...

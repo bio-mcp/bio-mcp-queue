@@ -1,0 +1,82 @@
+# Optimized for local development and personal use
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: bio-queue-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: bio-queue-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - ./data/minio:/data
+      - ./data/databases:/data/databases  # Local databases
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  # Scale this based on your CPU cores
+  celery-blast:
+    build: .
+    deploy:
+      replicas: 4  # Adjust based on your CPU cores
+    command: celery -A celery_app worker -Q blast -l info -c 1
+    environment:
+      - BIO_QUEUE_REDIS_URL=redis://redis:6379/0
+      - BIO_STORAGE_MINIO_ENDPOINT=minio:9000
+      - BIO_STORAGE_REDIS_URL=redis://redis:6379/2
+      # Optimize for local resources
+      - BIO_QUEUE_TASK_TIME_LIMIT=7200  # 2 hours max
+      - BIO_QUEUE_WORKER_MAX_TASKS_PER_CHILD=10
+    volumes:
+      - ./data/databases:/data/databases:ro
+      - ./temp:/tmp/celery-work
+    depends_on:
+      - redis
+      - minio
+    restart: unless-stopped
+
+  api:
+    build: .
+    container_name: bio-queue-api
+    ports:
+      - "8000:8000"
+    command: uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      - BIO_QUEUE_REDIS_URL=redis://redis:6379/0
+      - BIO_STORAGE_MINIO_ENDPOINT=minio:9000
+      - BIO_STORAGE_REDIS_URL=redis://redis:6379/2
+    volumes:
+      - ./src:/app/src  # Hot reload for development
+    depends_on:
+      - redis
+      - minio
+    restart: unless-stopped
+
+  # Optional: Remove if you don't want monitoring UI
+  flower:
+    build: .
+    container_name: bio-queue-flower
+    ports:
+      - "5555:5555"
+    command: celery -A celery_app flower --port=5555
+    environment:
+      - BIO_QUEUE_REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  databases:
+    driver: local
