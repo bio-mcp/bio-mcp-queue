@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # Redis for Celery broker and result backend
+  redis:
+    image: redis:7-alpine
+    container_name: bio-queue-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # MinIO for S3-compatible object storage
+  minio:
+    image: minio/minio:latest
+    container_name: bio-queue-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"  # Console
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Celery worker for BLAST tasks
+  celery-blast:
+    build: .
+    container_name: bio-queue-celery-blast
+    command: celery -A celery_app worker -Q blast -l info -n blast@%h
+    environment:
+      - BIO_QUEUE_REDIS_URL=redis://redis:6379/0
+      - BIO_QUEUE_RESULT_BACKEND=redis://redis:6379/1
+      - BIO_STORAGE_MINIO_ENDPOINT=minio:9000
+      - BIO_STORAGE_REDIS_URL=redis://redis:6379/2
+    volumes:
+      - ./src:/app/src
+      - blast-data:/data/blast-db:ro
+    depends_on:
+      - redis
+      - minio
+    restart: unless-stopped
+
+  # Celery worker for alignment tasks (future)
+  # celery-alignment:
+  #   build: .
+  #   container_name: bio-queue-celery-alignment
+  #   command: celery -A celery_app worker -Q alignment -l info -n alignment@%h
+  #   environment:
+  #     - BIO_QUEUE_REDIS_URL=redis://redis:6379/0
+  #   depends_on:
+  #     - redis
+  #     - minio
+
+  # Celery beat for scheduled tasks
+  celery-beat:
+    build: .
+    container_name: bio-queue-celery-beat
+    command: celery -A celery_app beat -l info
+    environment:
+      - BIO_QUEUE_REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # FastAPI application
+  api:
+    build: .
+    container_name: bio-queue-api
+    ports:
+      - "8000:8000"
+    command: python -m api
+    environment:
+      - BIO_QUEUE_REDIS_URL=redis://redis:6379/0
+      - BIO_STORAGE_MINIO_ENDPOINT=minio:9000
+      - BIO_STORAGE_REDIS_URL=redis://redis:6379/2
+    volumes:
+      - ./src:/app/src
+    depends_on:
+      - redis
+      - minio
+    restart: unless-stopped
+
+  # Flower for Celery monitoring
+  flower:
+    build: .
+    container_name: bio-queue-flower
+    ports:
+      - "5555:5555"
+    command: celery -A celery_app flower
+    environment:
+      - BIO_QUEUE_REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  minio-data:
+  blast-data:
