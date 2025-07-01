@@ -1,0 +1,152 @@
+name: 🧬 New Tool Request
+description: Request a new bioinformatics tool MCP server
+title: "[NEW TOOL] "
+labels: ["new-tool", "enhancement"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new bioinformatics tool! This helps us prioritize which tools to implement next.
+
+  - type: input
+    id: tool-name
+    attributes:
+      label: Tool Name
+      description: Name of the bioinformatics tool
+      placeholder: "e.g., bcftools, FastQC, SPAdes"
+    validations:
+      required: true
+
+  - type: input
+    id: tool-website
+    attributes:
+      label: Official Website
+      description: Link to the tool's official website or documentation
+      placeholder: "https://..."
+    validations:
+      required: true
+
+  - type: input
+    id: tool-license
+    attributes:
+      label: License
+      description: Software license (must be open source)
+      placeholder: "e.g., MIT, GPL-3.0, Apache-2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation-method
+    attributes:
+      label: Installation Method
+      description: How is this tool typically installed?
+      options:
+        - conda/bioconda
+        - apt/yum package manager
+        - pip/PyPI
+        - Source compilation
+        - Docker only
+        - Multiple methods
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Describe the main use cases for this tool
+      placeholder: |
+        1. Variant calling from BAM files
+        2. Quality filtering of variants
+        3. Format conversion (VCF to BCF)
+    validations:
+      required: true
+
+  - type: textarea
+    id: priority-functions
+    attributes:
+      label: Priority Functions
+      description: Which tool functions are most important to expose via MCP?
+      placeholder: |
+        1. bcftools call - variant calling
+        2. bcftools filter - quality filtering
+        3. bcftools view - format conversion
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: file-types
+    attributes:
+      label: Input/Output File Types
+      description: What file types does this tool work with?
+      options:
+        - label: FASTA/FASTQ
+        - label: BAM/SAM/CRAM
+        - label: VCF/BCF
+        - label: BED/GFF/GTF
+        - label: Custom formats
+        - label: Text files
+        - label: Binary formats
+
+  - type: dropdown
+    id: file-sizes
+    attributes:
+      label: Typical File Sizes
+      description: What size files does this tool typically process?
+      options:
+        - Small (< 100MB)
+        - Medium (100MB - 10GB)
+        - Large (10GB - 100GB)
+        - Very Large (> 100GB)
+        - Variable
+      default: 4
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Typical Runtime
+      description: How long does this tool typically take to run?
+      options:
+        - Seconds
+        - Minutes (< 30)
+        - Long (30 min - 2 hours)
+        - Very Long (> 2 hours)
+        - Variable
+      default: 4
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Integration Priority
+      description: How important is this tool for common workflows?
+      options:
+        - High - Essential for common workflows
+        - Medium - Useful addition
+        - Low - Nice to have
+      default: 1
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: execution-mode
+    attributes:
+      label: Execution Mode
+      description: Which execution modes would be suitable?
+      options:
+        - label: Immediate execution (< 5 minutes)
+        - label: Queue system (long-running jobs)
+        - label: Both modes depending on parameters
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional Notes
+      description: Any special considerations, dependencies, or implementation notes
+      placeholder: "Special dependencies, GPU requirements, memory needs, etc."
